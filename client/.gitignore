@@ -1,0 +1,162 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules
+.pnp
+.pnp.js
+
+# Production directories
+dist
+dist-ssr
+build
+
+# Local environment files
+*.local
+.env
+.env.*.local
+
+# Test and coverage directories
+coverage
+*.lcov
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+*.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Miscellaneous
+.vscode-test/
+npm-debug.log*
+testem.log
+yarn-error.log
+yarn-debug.log*
+pnpm-debug.log*
+
+# Next.js files
+.next
+out
+
+# Nuxt.js files
+.nuxt
+server/index.ssr.html
+server/index.spa.html
+
+# SvelteKit files
+.svelte-kit
+
+# Remix files
+.build
+
+# Gatsby files
+.cache/
+public
+
+# Firebase files
+.firebase
+
+# Dependency directories for specific package managers
+jspm_packages/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules
+.pnp
+.pnp.js
+
+# Production directories
+dist
+dist-ssr
+build
+
+# Local environment files
+*.local
+.env
+.env.*.local
+
+# Test and coverage directories
+coverage
+*.lcov
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+*.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Miscellaneous
+.vscode-test/
+npm-debug.log*
+testem.log
+yarn-error.log
+yarn-debug.log*
+pnpm-debug.log*
+
+# Next.js files
+.next
+out
+
+# Nuxt.js files
+.nuxt
+server/index.ssr.html
+server/index.spa.html
+
+# SvelteKit files
+.svelte-kit
+
+# Remix files
+.build
+
+# Gatsby files
+.cache/
+public
+
+# Firebase files
+.firebase
+
+# Dependency directories for specific package managers
+jspm_packages/

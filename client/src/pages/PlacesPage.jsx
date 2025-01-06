@@ -1,11 +1,13 @@
-import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
+import { Link, useParams, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Perks from "../Perks";
 import axios from "axios";
 import PhotosUploader from "../PhotosUploader";
 
 export default function PlacesPage() {
   const { action } = useParams();
+
+  // States for form data
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
   const [addedPhotos, setAddedPhotos] = useState([]);
@@ -15,40 +17,34 @@ export default function PlacesPage() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [maxGuest, setMaxGuests] = useState(1);
+  const [redirect, setRedirect] = useState("");
 
-  function inputHeader(text) {
-    return <p className="text-2xl mt-4">{text}</p>;
-  }
+  // States for places data
+  const [places, setPlaces] = useState([]);
+  const [error, setError] = useState("");
 
-  function inputDescription(text) {
-    return <p className="text-gray-500 text-sm">{text}</p>;
-  }
+  // Fetch all places on component mount
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      try {
+        const { data } = await axios.get("/places");
+        setPlaces(data);
+        console.log(data);
+      } catch (err) {
+        console.error("Failed to fetch places:", err);
+        setError("Failed to load places. Please try again.");
+      }
+    };
 
-  function preInput(header, description) {
-    return (
-      <div>
-        {inputHeader(header)}
-        {inputDescription(description)}
-      </div>
-    );
-  }
-  async function handleSubmit(ev) {
+    fetchPlaces();
+  }, []);
+
+  // Handle form submission for adding a new place
+  const handleSubmit = async (ev) => {
     ev.preventDefault();
-    // Handle form submission logic here (e.g., save the data to your backend)
-    console.log("Form submitted:", {
-      title,
-      address,
-      addedPhotos,
-      description,
-      perks,
-      extraInfo,
-      checkIn,
-      checkOut,
-      maxGuest,
-    });
 
     try {
-      const response = await axios.post("/api/places", {
+      await axios.post("/places", {
         title,
         address,
         photos: addedPhotos,
@@ -59,107 +55,135 @@ export default function PlacesPage() {
         checkOut,
         maxGuest,
       });
-      console.log("Place added successfully:", response.data);
-      // Optionally redirect or show success message
+      setRedirect("/account/places");
     } catch (error) {
       console.error("Failed to add place:", error);
       alert("Failed to add place. Please try again.");
     }
-  }
+  };
+
+  // Redirect after successful form submission
+  if (redirect) return <Navigate to={redirect} />;
 
   return (
     <div>
-      {action === undefined && <p>No action provided</p>}
-      {action !== "new" && (
-        <div className="text-center m-6">
-          <Link
-            className="inline-flex gap-1 bg-primary text-white py-2 px-6 rounded-full"
-            to={"/account/places/new"}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="w-4 h-6"
+      {action !== "new" ? (
+        <>
+          {/* Show error message if fetching places fails */}
+          {error && <div className="error">{error}</div>}
+
+          {/* Button to add a new place */}
+          <div className="text-center m-6">
+            <Link
+              to="/account/places/new"
+              className="inline-flex gap-1 bg-primary text-white py-2 px-6 rounded-full"
             >
-              <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-            </svg>
-            Add new place
-          </Link>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="w-4 h-6"
+              >
+                <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+              </svg>
+              Add new place
+            </Link>
+          </div>
+
+          {/* Display list of places */}
+          <div>
+            {places.length === 0 ? (
+              <p>No places found.</p>
+            ) : (
+              <ul>
+                {places.map((place) => (
+                  <li key={place._id} className="place-item">
+                    <h3>{place.title}</h3>
+                    <p>
+                      <strong>Address:</strong> {place.address}
+                    </p>
+                    <p>
+                      <strong>Description:</strong> {place.description}
+                    </p>
+                    <p>
+                      <strong>Max Guests:</strong> {place.maxGuest}
+                    </p>
+                    {place.photos?.length > 0 && (
+                      <div className="photos">
+                        {place.photos.map((photo, index) => (
+                          <img
+                            key={index}
+                            src={photo}
+                            alt={`${place.title} - ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      ) : (
+        // Render the form for adding a new place
+        <form onSubmit={handleSubmit}>
+          <InputField label="Title" value={title} setValue={setTitle} />
+          <InputField label="Address" value={address} setValue={setAddress} />
+          <PhotosUploader onPhotoChange={setAddedPhotos} />
+          <InputField
+            label="Description"
+            value={description}
+            setValue={setDescription}
+            type="textarea"
+          />
+          <Perks selected={perks} onChange={setPerks} />
+          <InputField
+            label="Extra Info"
+            value={extraInfo}
+            setValue={setExtraInfo}
+            type="textarea"
+          />
+          <InputField
+            label="Check-In Time"
+            value={checkIn}
+            setValue={setCheckIn}
+            type="number"
+          />
+          <InputField
+            label="Check-Out Time"
+            value={checkOut}
+            setValue={setCheckOut}
+            type="number"
+          />
+          <InputField
+            label="Max Guests"
+            value={maxGuest}
+            setValue={setMaxGuests}
+            type="number"
+          />
+          <button className="primary my-4" type="submit">
+            Save
+          </button>
+        </form>
       )}
-      {action === "new" && (
-        <div>
-          <form onSubmit={handleSubmit}>
-            {preInput(
-              "Title",
-              "Title for your place. should be short and catchy as in advertisement."
-            )}
-            <input
-              type="text"
-              value={title}
-              onChange={(ev) => setTitle(ev.target.value)}
-              placeholder="title, for example: my lovely apartment"
-            />
-            {preInput("Address", "Address of the place.")}
-            <input
-              type="text"
-              value={address}
-              onChange={(ev) => setAddress(ev.target.value)}
-              placeholder="address"
-            />
-            {preInput("Photos", "More = Better")}
-            <PhotosUploader></PhotosUploader>
-            {preInput("Description", "Description of the places.")}
-            <textarea
-              value={description}
-              onChange={(ev) => setDescription(ev.target.value)}
-            ></textarea>
-            {preInput("Perks", "Select all the perks of your place.")}
-            <Perks selected={perks} onChange={setPerks}></Perks>
-            {preInput("Extra info", "House rules, etc.")}
-            <textarea
-              value={extraInfo}
-              onChange={(ev) => setExtraInfo(ev.target.value)}
-            ></textarea>
-            {preInput(
-              "Check in&out times",
-              "Add check in and check out times, remember to have some time window for cleaning the room between guests."
-            )}
-            <div className="grid gap-2 sm:grid-cols-3">
-              <div>
-                <h3 className="mt-2 -mb-1">Check in time</h3>
-                <input
-                  type="text"
-                  value={checkIn}
-                  onChange={(ev) => setCheckIn(ev.target.value)}
-                  placeholder="15:00"
-                />
-              </div>
-              <div>
-                <h3 className="mt-2 -mb-1">Check out time</h3>
-                <input
-                  type="text"
-                  value={checkOut}
-                  onChange={(ev) => setCheckOut(ev.target.value)}
-                  placeholder="11:00"
-                />
-              </div>
-              <div>
-                <h3 className="mt-2 -mb-1">Max guests</h3>
-                <input
-                  type="number"
-                  value={maxGuest}
-                  onChange={(ev) => setMaxGuests(ev.target.value)}
-                  placeholder="1"
-                />
-              </div>
-            </div>
-            <button className="primary my-4" type="submit">
-              Save
-            </button>
-          </form>
-        </div>
+    </div>
+  );
+}
+
+// Helper component for input fields
+function InputField({ label, value, setValue, type = "text" }) {
+  return (
+    <div>
+      <h3>{label}</h3>
+      {type === "textarea" ? (
+        <textarea value={value} onChange={(ev) => setValue(ev.target.value)} />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(ev) => setValue(ev.target.value)}
+        />
       )}
     </div>
   );
