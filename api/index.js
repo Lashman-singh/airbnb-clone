@@ -15,6 +15,8 @@ const app = express();
 const bcryptSalt = bcrypt.genSaltSync(10);
 const jwtSecret = "hachjabcupjqdpb556aed";
 
+const Place = require("./models/place");
+
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(cookieParser());
@@ -122,17 +124,53 @@ const phototsMiddleware = multer({ dest: "uploads/" });
 app.post("/upload", phototsMiddleware.array("photos", 100), (req, res) => {
   const uploadedFiles = [];
   for (let i = 0; i < req.files.length; i++) {
-    const { path, originalname } = req.files[i];
-    const parts = originalname.split(".");
-    const ext = parts[parts.length - 1];
-    const newPath = path + "." + ext;
-    fs.renameSync(path, newPath);
-    const fileName = newPath.replace("uploads/", "");
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${fileName}`;
+    const { path: tempPath, originalname } = req.files[i];
+    const ext = path.extname(originalname); // Get file extension
+    const newPath = `${tempPath}${ext}`; // Add extension to temporary path
+    fs.renameSync(tempPath, newPath); // Rename the file with extension
+    const fileName = path.basename(newPath); // Extract the file name
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${fileName}`; // Construct the correct URL
     uploadedFiles.push(fileUrl);
   }
   res.json(uploadedFiles);
 });
+
+app.post('/places', (req, res) => {
+  const { token } = req.cookies;
+  const {
+    title, address, addedPhotos, description,
+    perks, extraInfo, checkIn, checkOut, maxGuests,
+  } = req.body;
+
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) {
+      return res.status(401).json({ status: "error", message: "Unauthorized" });
+    }
+
+    try {
+      // Create a new place document
+      const placeDoc = await Place.create({
+        owner: userData.id, // Use the user ID from the verified token
+        title, 
+        address, 
+        addedPhotos, 
+        description, 
+        perks,
+        extraInfo, 
+        checkIn, 
+        checkOut, 
+        maxGuests,
+      });
+
+      // Send the newly created place document as the response
+      res.json(placeDoc);
+    } catch (error) {
+      console.error("Failed to create place:", error);
+      res.status(500).json({ status: "error", message: "Failed to create place" });
+    }
+  });
+});
+
 
 
 app.listen(4000, () => {
